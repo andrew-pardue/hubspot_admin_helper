@@ -1,0 +1,79 @@
+<?php
+
+/**
+ * Implements hook_menu() to get the config page listed
+ */
+function hubspot_admin_helper_menu() {
+  $items = array();
+
+  $items['hubspot-admin-helper/json'] = array(
+    'page callback' => '_hubspot_admin_helper_json',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function hubspot_admin_helper_form_hubspot_admin_settings_alter(&$form, &$form_state, $form_id) {
+  $form['#attached']['js'] = array(
+    drupal_get_path('module', 'hubspot_admin_helper') . '/js/hubspot_submit_ajax.js',
+  );
+}
+
+function _hubspot_admin_helper_json() {
+  // Parse the data into a usable 'values' array
+  $data = _hubspot_admin_helper_parse_str($_POST['data']);
+  // Get the form.
+  $form = drupal_get_form('hubspot_admin_settings');
+  // Get the default form state.
+  $form_state = form_state_defaults();
+  // Get the form and form state from the cache for the form you just got.
+  form_get_cache($form['#build_id'], $form_state);
+
+  $form_state['values'] = $data;
+
+  // Include the hubspot admin inc file
+  include_once(drupal_get_path('module', 'hubspot') . '/hubspot.admin.inc');
+
+  // Send the data to the hubspot admin submit function
+  hubspot_admin_settings_submit($form, $form_state);
+}
+
+function _hubspot_admin_helper_parse_str($string) {
+  if ($string === '') {
+    return FALSE;
+  }
+  $result = array();
+  // find the pairs "name=value"
+  $pairs = explode('&', urldecode($string));
+  foreach ($pairs as $pair) {
+    // use the original parse_str() on each element
+    parse_str($pair, $params);
+    $k = key($params);
+    // Fist check for webform keys
+    if($k == 'webforms'){
+      $arr = explode('[', $k);
+      $nid = key($params['webforms']);
+      $form_id = key($params['webforms'][$nid]);
+      // if this is the hubspot form key, we just add the form id number
+      if($form_id == 'hubspot_form'){
+        $result['webforms'][$nid][$form_id] = $params['webforms'][$nid][$form_id];
+      } else {
+        $field_name = key($params['webforms'][$nid][$form_id]);
+        $result['webforms'][$nid][$form_id][$field_name] = $params['webforms'][$nid][$form_id][$field_name];
+      }
+    } else {
+      // if this key is not already set, add the params
+      if (!isset($result[$k])) {
+        $result += $params;
+      } else {
+        $result[$k] += $params[$k];
+      }
+    }
+  }
+  return $result;
+}
