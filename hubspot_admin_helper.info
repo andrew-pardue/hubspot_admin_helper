@@ -1,8 +1,8 @@
 name = Hubspot Admin Helper
-description = Provides a workaround when trying to submit large datasets witht the Hubspot admin config form.
+description = Provides a workaround when trying to submit large datasets with the Hubspot admin config form.
  integration
 package = HubSpot
 core = 7.x
-php = 5.5.3
+php = 7.3.3
 dependencies[] = hubspot
 files[] = hubspot_admin_helper.module

@@ -18,7 +18,7 @@ function hubspot_admin_helper_menu() {
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function hubspot_admin_helper_form_hubspot_admin_settings_alter(&$form, &$form_state, $form_id) {
+function hubspot_admin_helper_form_hubspot_form_settings_alter(&$form, &$form_state, $form_id) {
   $form['#attached']['js'] = array(
     drupal_get_path('module', 'hubspot_admin_helper') . '/js/hubspot_submit_ajax.js',
   );
@@ -28,7 +28,7 @@ function _hubspot_admin_helper_json() {
   // Parse the data into a usable 'values' array
   $data = _hubspot_admin_helper_parse_str($_POST['data']);
   // Get the form.
-  $form = drupal_get_form('hubspot_admin_settings');
+  $form = drupal_get_form('hubspot_form_settings');
   // Get the default form state.
   $form_state = form_state_defaults();
   // Get the form and form state from the cache for the form you just got.
@@ -36,11 +36,16 @@ function _hubspot_admin_helper_json() {
 
   $form_state['values'] = $data;
 
-  // Include the hubspot admin inc file
-  include_once(drupal_get_path('module', 'hubspot') . '/hubspot.admin.inc');
+  // Include the Hubspot settings inc file
+  include_once(drupal_get_path('module', 'hubspot') . '/hubspot.settings.inc');
 
-  // Send the data to the hubspot admin submit function
-  hubspot_admin_settings_submit($form, $form_state);
+  // Send the data to the Hubspot form settings submit function
+  hubspot_form_settings_submit($form, $form_state);
+
+  // Output the response
+  drupal_json_output($data);
+
+  drupal_exit();
 }
 
 function _hubspot_admin_helper_parse_str($string) {
